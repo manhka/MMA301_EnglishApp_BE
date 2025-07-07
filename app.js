@@ -19,8 +19,8 @@ app.get("/", (req, res) => {
 });
 
 // mount routes
-// const userRoute = require("./routes/userRoute");
-// app.use("/api/auth", userRoute);
+const userRoute = require("./routes/userRoute");
+app.use("/api/auth", userRoute);
 // app.use("/api/lessons", lessonRoutes);
 
 // 404 handler

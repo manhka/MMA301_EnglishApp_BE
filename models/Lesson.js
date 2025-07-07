@@ -7,6 +7,11 @@ const LessonSchema = new mongoose.Schema({
     enum: ["listening", "speaking", "reading", "writing"],
     required: true,
   },
+  level: {
+    type: String,
+    enum: ["beginner", "intermediate", "advanced"],
+    required: true,
+  },
   topicId: { type: mongoose.Schema.Types.ObjectId, ref: "Topic" },
   content: String,
   media: [String],

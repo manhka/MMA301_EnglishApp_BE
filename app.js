@@ -21,7 +21,12 @@ app.get("/", (req, res) => {
 // mount routes
 const userRoute = require("./routes/userRoute");
 app.use("/api/auth", userRoute);
-// app.use("/api/lessons", lessonRoutes);
+const userLearningRoute = require("./routes/userLearningRoute");
+app.use("/api", userLearningRoute);
+const topicRoute = require("./routes/topicRoute");
+app.use("/api", topicRoute);
+const lessonRoute = require("./routes/lessonRoute");
+app.use("/api", lessonRoute);
 
 // 404 handler
 app.use((req, res, next) => {

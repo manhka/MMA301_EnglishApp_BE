@@ -9,13 +9,14 @@ const LessonSchema = new mongoose.Schema({
   },
   level: {
     type: String,
-    enum: ["beginner", "intermediate", "advanced"],
+    enum: ["Beginner", "Intermediate", "Advanced"],
     required: true,
   },
   topicId: { type: mongoose.Schema.Types.ObjectId, ref: "Topic" },
   content: String,
   media: [String],
   questions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Question" }],
+  duration: { type: Number, default: 10, required: true },
   createdAt: { type: Date, default: Date.now },
 });
 

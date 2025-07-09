@@ -4,7 +4,12 @@ const QuestionSchema = new mongoose.Schema({
   questionText: { type: String, required: true },
   type: {
     type: String,
-    enum: ["multiple-choice", "fill-in-the-blank", "true-false"],
+    enum: [
+      "multiple-choice",
+      "single-choice",
+      "fill-in-the-blank",
+      "true-false",
+    ],
     default: "multiple-choice",
   },
   level: {
@@ -13,7 +18,7 @@ const QuestionSchema = new mongoose.Schema({
     required: true,
   },
   choices: [String],
-  correctAnswer: Number,
+  correctAnswer: [Number],
   explanation: String,
   skill: {
     type: String,

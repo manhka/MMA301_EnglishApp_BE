@@ -5,9 +5,10 @@ exports.getLessonDetail = async (req, res) => {
   try {
     const { lessonId } = req.params;
 
-    const lesson = await Lesson.findById(lessonId)
-      .populate("topicId", "name description")
-      .populate("questions");
+    const lesson = await Lesson.findById(lessonId).populate(
+      "topicId",
+      "name description"
+    );
 
     if (!lesson) {
       return res.status(404).json({ message: "Lesson not found." });

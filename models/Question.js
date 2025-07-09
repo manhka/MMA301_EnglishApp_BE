@@ -18,7 +18,7 @@ const QuestionSchema = new mongoose.Schema({
     required: true,
   },
   choices: [String],
-  correctAnswer: [Number],
+  correctAnswers: [Number],
   explanation: String,
   skill: {
     type: String,

@@ -8,5 +8,5 @@ router.get(
   userLearningController.getLessonsByTopicLevelSkill
 );
 router.get("/lesson/:id/reading", userLearningController.getReadingLesson);
-router.post("/submit", userLearningController.submitResult);
+router.get("/lesson/:id/listening", userLearningController.getListeningLesson);
 module.exports = router;

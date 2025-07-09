@@ -27,6 +27,8 @@ const topicRoute = require("./routes/topicRoute");
 app.use("/api", topicRoute);
 const lessonRoute = require("./routes/lessonRoute");
 app.use("/api", lessonRoute);
+const resultRoute = require("./routes/resultRoute");
+app.use("/api", resultRoute);
 
 // 404 handler
 app.use((req, res, next) => {

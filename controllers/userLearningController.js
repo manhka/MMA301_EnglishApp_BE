@@ -103,7 +103,6 @@ exports.getReadingLesson = async (req, res) => {
       path: "questions",
       select: "_id questionText type choices ",
     });
-
     if (!lesson || lesson.skill !== "reading") {
       return res
         .status(404)
@@ -122,64 +121,29 @@ exports.getReadingLesson = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
-exports.submitResult = async (req, res) => {
+exports.getListeningLesson = async (req, res) => {
   try {
-    const { userId, lessonId, skill, answers } = req.body;
+    const lessonId = req.params.id;
+    const lesson = await Lesson.findById(lessonId).populate({
+      path: "questions",
+      select: "_id questionText type choices",
+    });
 
-    const lesson = await Lesson.findById(lessonId).populate("questions");
-    if (!lesson) return res.status(404).json({ message: "Lesson not found" });
-
-    const results = [];
-    let totalCorrect = 0;
-
-    for (const q of lesson.questions) {
-      const questionId = q._id.toString();
-      const correctAnswers = q.correctAnswers;
-      const userSelected = answers[questionId];
-
-      let isCorrect = false;
-
-      if (Array.isArray(correctAnswers)) {
-        const sortedUser = Array.isArray(userSelected)
-          ? [...userSelected].sort()
-          : [];
-        const sortedCorrect = [...correctAnswers].sort();
-        isCorrect =
-          JSON.stringify(sortedUser) === JSON.stringify(sortedCorrect);
-      } else {
-        isCorrect = userSelected === correctAnswers;
-      }
-
-      if (isCorrect) totalCorrect++;
-
-      results.push({
-        questionId: q._id,
-        selected: userSelected,
-        correct: isCorrect,
-      });
+    if (!lesson || lesson.skill !== "listening") {
+      return res
+        .status(404)
+        .json({ error: "Lesson not found or not listening type" });
     }
 
-    const score = Math.round((totalCorrect / lesson.questions.length) * 100);
-
-    const saved = await Result.create({
-      userId,
-      lessonId,
-      skill,
-      score,
-      details: results,
-    });
-
-    res.status(201).json({
-      message: "Result submitted",
-      score,
-      totalQuestions: lesson.questions.length,
-      correctAnswers: totalCorrect,
-      resultId: saved._id,
-      details: results,
+    res.json({
+      lessonId: lesson._id,
+      title: lesson.title,
+      media: lesson.media,
+      duration: lesson.duration,
+      questions: lesson.questions,
     });
   } catch (err) {
-    console.error("Submit Error:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Error fetching listening lesson:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 };

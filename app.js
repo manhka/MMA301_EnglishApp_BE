@@ -11,7 +11,7 @@ app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
-
+app.use("/uploads", express.static("uploads"));
 app.get("/", (req, res) => {
   res.json({
     message: "Welcome to IELTS backend API 🎉",

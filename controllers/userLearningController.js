@@ -121,6 +121,48 @@ exports.getReadingLesson = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+exports.getWritingLesson = async (req, res) => {
+  try {
+    const lessonId = req.params.id;
+    const lesson = await Lesson.findById(lessonId);
+    if (!lesson || lesson.skill !== "writing") {
+      return res
+        .status(404)
+        .json({ error: "Lesson not found or not reading type" });
+    }
+
+    res.json({
+      lessonId: lesson._id,
+      title: lesson.title,
+      content: lesson.content,
+      duration: lesson.duration,
+    });
+  } catch (err) {
+    console.error("Error fetching reading lesson:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+exports.getSpeakingLesson = async (req, res) => {
+  try {
+    const lessonId = req.params.id;
+    const lesson = await Lesson.findById(lessonId);
+    if (!lesson || lesson.skill !== "speaking") {
+      return res
+        .status(404)
+        .json({ error: "Lesson not found or not speaking type" });
+    }
+
+    res.json({
+      lessonId: lesson._id,
+      title: lesson.title,
+      content: lesson.content,
+      duration: lesson.duration,
+    });
+  } catch (err) {
+    console.error("Error fetching reading lesson:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 exports.getListeningLesson = async (req, res) => {
   try {
     const lessonId = req.params.id;
@@ -145,5 +187,59 @@ exports.getListeningLesson = async (req, res) => {
   } catch (err) {
     console.error("Error fetching listening lesson:", err);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+const WritingSubmission = require("../models/WritingSubmission");
+const { evaluateWriting } = require("../services/ai");
+
+exports.submitWriting = async (req, res) => {
+  const { userId, lessonId, question, text } = req.body;
+
+  if (!userId || !lessonId || !text || !question) {
+    return res.status(400).json({ error: "Missing required fields." });
+  }
+
+  try {
+    const aiFeedback = await evaluateWriting(question, text);
+    console.log("AI feedback:\n", aiFeedback);
+
+    // Tìm điểm tổng thể từ phản hồi
+    let aiScore = null;
+
+    const bandRegexList = [
+      /\*\*?Overall Band Score:\*\*?\s*([0-9.]+)/i, // markdown bold
+      /Overall Band Score:?\s*([0-9.]+)/i, // chuẩn
+      /Overall Score:?\s*([0-9.]+)/i,
+      /Overall Band:?\s*([0-9.]+)/i,
+      /Overall:?\s*([0-9.]+)/i,
+    ];
+
+    for (const regex of bandRegexList) {
+      const match = aiFeedback.match(regex);
+      if (match) {
+        aiScore = parseFloat(match[1]);
+        break;
+      }
+    }
+
+    const submission = new WritingSubmission({
+      userId,
+      lessonId,
+      question,
+      text,
+      aiScore,
+      aiFeedback,
+    });
+
+    await submission.save();
+
+    res.status(200).json({
+      message: "Writing submitted and evaluated.",
+      aiScore,
+      aiFeedback,
+    });
+  } catch (error) {
+    console.error("Writing submission error:", error.message);
+    res.status(500).json({ error: "Internal server error." });
   }
 };

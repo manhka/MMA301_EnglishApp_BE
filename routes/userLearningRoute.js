@@ -9,4 +9,7 @@ router.get(
 );
 router.get("/lesson/:id/reading", userLearningController.getReadingLesson);
 router.get("/lesson/:id/listening", userLearningController.getListeningLesson);
+router.get("/lesson/:id/writing", userLearningController.getWritingLesson);
+router.get("/lesson/:id/speaking", userLearningController.getSpeakingLesson);
+router.post("/submit/writing", userLearningController.submitWriting);
 module.exports = router;

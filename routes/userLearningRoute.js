@@ -12,4 +12,8 @@ router.get("/lesson/:id/listening", userLearningController.getListeningLesson);
 router.get("/lesson/:id/writing", userLearningController.getWritingLesson);
 router.get("/lesson/:id/speaking", userLearningController.getSpeakingLesson);
 router.post("/submit/writing", userLearningController.submitWriting);
+router.get(
+  "/writing-submit/:id",
+  userLearningController.getWritingSubmissionById
+);
 module.exports = router;

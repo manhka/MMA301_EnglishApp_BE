@@ -236,14 +236,42 @@ exports.submitWriting = async (req, res) => {
       userId,
       skill: "writing",
       writingSubmissionId: submission._id,
+      lessonId: submission.lessonId,
+      score: aiScore,
+      submittedAt: submission.submittedAt,
     });
     res.status(200).json({
       message: "Writing submitted and evaluated.",
+      submissionId: submission._id,
       aiScore,
       aiFeedback,
     });
   } catch (error) {
     console.error("Writing submission error:", error.message);
     res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+exports.getWritingSubmissionById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const submission = await WritingSubmission.findById(id).populate(
+      "lessonId"
+    );
+
+    if (!submission) {
+      return res.status(404).json({ message: "Submission not found" });
+    }
+
+    res.json({
+      aiScore: submission.aiScore,
+      aiFeedback: submission.aiFeedback,
+      submittedAt: submission.submittedAt,
+      content: submission.lessonId?.content || "",
+    });
+  } catch (error) {
+    console.error("Error fetching writing submission:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };

@@ -59,6 +59,9 @@ exports.submitResult = async (req, res) => {
       userId,
       skill: lesson.skill,
       resultId: result._id,
+      lessonId: lesson._id,
+      score,
+      submittedAt: new Date(),
     });
     const populatedResult = await Result.findById(result._id)
       .populate("lessonId", "title duration")

@@ -4,6 +4,6 @@ const historyController = require("../controllers/historyController");
 
 router.post("/history/create", historyController.createHistory);
 
-router.get("/history/:userId", historyController.getHistoriesByUser);
+router.get("/history/:userId", historyController.getUserHistory);
 
 module.exports = router;

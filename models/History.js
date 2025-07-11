@@ -12,6 +12,9 @@ const HistorySchema = new mongoose.Schema({
     ref: "WritingSubmission",
   },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  lessonId: { type: mongoose.Schema.Types.ObjectId, ref: "Lesson" },
+  score: Number,
+  submittedAt: { type: Date, default: Date.now },
 });
 
 module.exports = mongoose.model("History", HistorySchema, "histories");

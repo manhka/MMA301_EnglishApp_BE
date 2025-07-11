@@ -29,6 +29,8 @@ const lessonRoute = require("./routes/lessonRoute");
 app.use("/api", lessonRoute);
 const resultRoute = require("./routes/resultRoute");
 app.use("/api", resultRoute);
+const historyRoute = require("./routes/historyRoutes");
+app.use("/api", historyRoute);
 
 // 404 handler
 app.use((req, res, next) => {

@@ -1,6 +1,6 @@
 const Result = require("../models/Result");
 const Lesson = require("../models/Lesson");
-
+const History = require("../models/History");
 exports.submitResult = async (req, res) => {
   try {
     const { lessonId, answers, userId } = req.body;
@@ -55,7 +55,11 @@ exports.submitResult = async (req, res) => {
       score,
       details,
     });
-
+    await History.create({
+      userId,
+      skill: lesson.skill,
+      resultId: result._id,
+    });
     const populatedResult = await Result.findById(result._id)
       .populate("lessonId", "title duration")
       .populate("details.questionId");

@@ -1,8 +1,7 @@
 const express = require("express");
-const router = express.Router();
 const Result = require("../models/Result");
 const Lesson = require("../models/Lesson");
-
+const History = require("../models/History");
 exports.getUserProgress = async (req, res) => {
   try {
     const { userId, level } = req.params;
@@ -232,7 +231,12 @@ exports.submitWriting = async (req, res) => {
     });
 
     await submission.save();
-
+    // create history
+    await History.create({
+      userId,
+      skill: "writing",
+      writingSubmissionId: submission._id,
+    });
     res.status(200).json({
       message: "Writing submitted and evaluated.",
       aiScore,

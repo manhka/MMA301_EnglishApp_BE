@@ -2,7 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const helmet = require("helmet");
-
+const path = require("path");
 const app = express();
 
 // middlewares
@@ -11,7 +11,7 @@ app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.get("/", (req, res) => {
   res.json({
     message: "Welcome to IELTS backend API 🎉",
@@ -32,6 +32,9 @@ app.use("/api", resultRoute);
 const historyRoute = require("./routes/historyRoutes");
 app.use("/api", historyRoute);
 
+// app.use("/api/lessons", lessonRoutes);
+const lessionRoute = require("./routes/lessonRoute");
+app.use("/api/lessons", lessionRoute);
 // 404 handler
 app.use((req, res, next) => {
   res.status(404).json({ message: "Endpoint not found" });

@@ -71,16 +71,73 @@ exports.getLessonById = async (req, res) => {
 // Cập nhật Lesson theo ID
 exports.updateLesson = async (req, res) => {
   try {
-    const lesson = await Lesson.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
+    const {
+      title,
+      skill,
+      level,
+      topic,
+      questions,
+      content,
+      duration
+    } = req.body;
+
+    const lesson = await Lesson.findById(req.params.id);
     if (!lesson) {
       return res.status(404).json({ message: "Lesson not found" });
     }
-    res.json(lesson);
+
+    // 1. Xử lý Topic
+    let topicId = lesson.topicId;
+
+    if (topic) {
+      const topicObj = typeof topic === "string" ? JSON.parse(topic) : topic;
+      if (topicId) {
+        // Có topic cũ -> update
+        await Topic.findByIdAndUpdate(topicId, topicObj);
+      } else {
+        // Không có topic -> tạo mới
+        const newTopic = new Topic(topicObj);
+        await newTopic.save();
+        topicId = newTopic._id;
+      }
+    }
+    // Nếu không gửi topic => giữ nguyên topicId cũ
+
+    // 2. Xử lý Questions
+    let questionIds = lesson.questions || [];
+
+    if (questions) {
+      const questionsArray = typeof questions === "string" ? JSON.parse(questions) : questions;
+
+      // Xoá câu hỏi cũ
+      if (questionIds.length) {
+        await Question.deleteMany({ _id: { $in: questionIds } });
+      }
+
+      // Tạo mới câu hỏi
+      if (questionsArray && questionsArray.length) {
+        const createdQuestions = await Question.insertMany(questionsArray);
+        questionIds = createdQuestions.map((q) => q._id);
+      } else {
+        questionIds = [];
+      }
+    }
+    // Nếu không gửi questions => giữ nguyên danh sách cũ
+
+    // 3. Cập nhật Lesson
+    lesson.title = title !== undefined ? title : lesson.title;
+    lesson.skill = skill !== undefined ? skill : lesson.skill;
+    lesson.level = level !== undefined ? level : lesson.level;
+    lesson.content = content !== undefined ? content : lesson.content;
+    lesson.duration = duration !== undefined ? duration : lesson.duration;
+    lesson.topicId = topicId;
+    lesson.questions = questionIds;
+
+    await lesson.save();
+
+    res.json({ message: "Lesson updated successfully", lesson });
   } catch (error) {
+    console.error("Update failed", error);
     res.status(400).json({ error: error.message });
   }
 };

@@ -25,14 +25,11 @@ const userLearningRoute = require("./routes/userLearningRoute");
 app.use("/api", userLearningRoute);
 const topicRoute = require("./routes/topicRoute");
 app.use("/api", topicRoute);
-const lessonRoute = require("./routes/lessonRoute");
-app.use("/api", lessonRoute);
 const resultRoute = require("./routes/resultRoute");
 app.use("/api", resultRoute);
 const historyRoute = require("./routes/historyRoutes");
 app.use("/api", historyRoute);
 
-// app.use("/api/lessons", lessonRoutes);
 const lessionRoute = require("./routes/lessonRoute");
 app.use("/api/lessons", lessionRoute);
 // 404 handler

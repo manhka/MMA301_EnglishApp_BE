@@ -88,28 +88,23 @@ exports.updateLesson = async (req, res) => {
 
     // 1. Xử lý Topic
     let topicId = lesson.topicId;
-
     if (topic) {
       const topicObj = typeof topic === "string" ? JSON.parse(topic) : topic;
       if (topicId) {
-        // Có topic cũ -> update
         await Topic.findByIdAndUpdate(topicId, topicObj);
       } else {
-        // Không có topic -> tạo mới
         const newTopic = new Topic(topicObj);
         await newTopic.save();
         topicId = newTopic._id;
       }
     }
-    // Nếu không gửi topic => giữ nguyên topicId cũ
 
     // 2. Xử lý Questions
     let questionIds = lesson.questions || [];
-
     if (questions) {
       const questionsArray = typeof questions === "string" ? JSON.parse(questions) : questions;
 
-      // Xoá câu hỏi cũ
+      // Xóa câu hỏi cũ
       if (questionIds.length) {
         await Question.deleteMany({ _id: { $in: questionIds } });
       }
@@ -122,7 +117,6 @@ exports.updateLesson = async (req, res) => {
         questionIds = [];
       }
     }
-    // Nếu không gửi questions => giữ nguyên danh sách cũ
 
     // 3. Cập nhật Lesson
     lesson.title = title !== undefined ? title : lesson.title;
@@ -132,6 +126,11 @@ exports.updateLesson = async (req, res) => {
     lesson.duration = duration !== undefined ? duration : lesson.duration;
     lesson.topicId = topicId;
     lesson.questions = questionIds;
+
+    // Nếu có file media mới
+    if (req.file) {
+      lesson.media = req.file.path;
+    }
 
     await lesson.save();
 

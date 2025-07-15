@@ -4,7 +4,7 @@ const LessonSchema = new mongoose.Schema({
   title: { type: String, required: true },
   skill: {
     type: String,
-    enum: ["listening", "speaking", "reading", "writing"],
+    enum: ["listening", "reading", "writing"],
     required: true,
   },
   level: {

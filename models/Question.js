@@ -14,7 +14,7 @@ const QuestionSchema = new mongoose.Schema({
   },
   level: {
     type: String,
-    enum: ["beginner", "intermediate", "advanced"],
+    enum: ["Beginner", "Intermediate", "Advanced"],
     required: true,
   },
   choices: [String],
@@ -22,7 +22,7 @@ const QuestionSchema = new mongoose.Schema({
   explanation: String,
   skill: {
     type: String,
-    enum: ["listening", "reading"],
+    enum: ["listening", "reading", "writing"],
     required: true,
   },
 });

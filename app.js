@@ -17,6 +17,7 @@ app.get("/", (req, res) => {
     message: "Welcome to IELTS backend API 🎉",
   });
 });
+const authMiddleware = require("./middleware/authMiddleware");
 
 // mount routes
 const userRoute = require("./routes/userRoute");
@@ -24,13 +25,13 @@ app.use("/api/auth", userRoute);
 const userLearningRoute = require("./routes/userLearningRoute");
 app.use("/api", userLearningRoute);
 const topicRoute = require("./routes/topicRoute");
-app.use("/api", topicRoute);
+app.use("/api", authMiddleware, topicRoute);
 const lessonRoute = require("./routes/lessonRoute");
-app.use("/api", lessonRoute);
+app.use("/api", authMiddleware, lessonRoute);
 const resultRoute = require("./routes/resultRoute");
-app.use("/api", resultRoute);
+app.use("/api", authMiddleware, resultRoute);
 const historyRoute = require("./routes/historyRoutes");
-app.use("/api", historyRoute);
+app.use("/api", authMiddleware, historyRoute);
 
 // 404 handler
 app.use((req, res, next) => {

@@ -24,7 +24,7 @@ router.post(
 );
 
 // Lấy tất cả Lesson (lọc skill và level bằng query param)
-router.get("/", lessonController.getLessons);
+router.get("/get_all", lessonController.getLessons);
 
 // Lấy Lesson theo ID
 router.get("/:id", lessonController.getLessonById);

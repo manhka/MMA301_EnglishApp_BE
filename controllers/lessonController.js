@@ -71,22 +71,15 @@ exports.getLessonById = async (req, res) => {
 // Cập nhật Lesson theo ID
 exports.updateLesson = async (req, res) => {
   try {
-    const {
-      title,
-      skill,
-      level,
-      topic,
-      questions,
-      content,
-      duration
-    } = req.body;
+    const { title, skill, level, topic, questions, content, duration } =
+      req.body || {};
 
     const lesson = await Lesson.findById(req.params.id);
     if (!lesson) {
       return res.status(404).json({ message: "Lesson not found" });
     }
 
-    // 1. Xử lý Topic
+    // Parse topic
     let topicId = lesson.topicId;
     if (topic) {
       const topicObj = typeof topic === "string" ? JSON.parse(topic) : topic;
@@ -99,41 +92,38 @@ exports.updateLesson = async (req, res) => {
       }
     }
 
-    // 2. Xử lý Questions
+    // Parse questions
     let questionIds = lesson.questions || [];
     if (questions) {
-      const questionsArray = typeof questions === "string" ? JSON.parse(questions) : questions;
+      const questionsArray =
+        typeof questions === "string" ? JSON.parse(questions) : questions;
 
-      // Xóa câu hỏi cũ
       if (questionIds.length) {
         await Question.deleteMany({ _id: { $in: questionIds } });
       }
 
-      // Tạo mới câu hỏi
-      if (questionsArray && questionsArray.length) {
-        const createdQuestions = await Question.insertMany(questionsArray);
-        questionIds = createdQuestions.map((q) => q._id);
+      if (questionsArray.length) {
+        const created = await Question.insertMany(questionsArray);
+        questionIds = created.map((q) => q._id);
       } else {
         questionIds = [];
       }
     }
 
-    // 3. Cập nhật Lesson
-    lesson.title = title !== undefined ? title : lesson.title;
-    lesson.skill = skill !== undefined ? skill : lesson.skill;
-    lesson.level = level !== undefined ? level : lesson.level;
-    lesson.content = content !== undefined ? content : lesson.content;
-    lesson.duration = duration !== undefined ? duration : lesson.duration;
+    // Update lesson
+    lesson.title = title ?? lesson.title;
+    lesson.skill = skill ?? lesson.skill;
+    lesson.level = level ?? lesson.level;
+    lesson.content = content ?? lesson.content;
+    lesson.duration = duration ?? lesson.duration;
     lesson.topicId = topicId;
     lesson.questions = questionIds;
 
-    // Nếu có file media mới
     if (req.file) {
       lesson.media = req.file.path;
     }
 
     await lesson.save();
-
     res.json({ message: "Lesson updated successfully", lesson });
   } catch (error) {
     console.error("Update failed", error);
@@ -156,20 +146,15 @@ exports.deleteLesson = async (req, res) => {
 
 exports.createFullLesson = async (req, res) => {
   try {
-    const {
-      title,
-      skill,
-      level,
-      topic,
-      questions,
-      content
-    } = req.body;
+    const { title, skill, level, topic, questions, content, duration } =
+      req.body;
 
     // Nếu upload file (multer)
     const mediaFile = req.file ? req.file.filename : null;
 
     const topicObj = typeof topic === "string" ? JSON.parse(topic) : topic;
-    const questionsArray = typeof questions === "string" ? JSON.parse(questions) : questions;
+    const questionsArray =
+      typeof questions === "string" ? JSON.parse(questions) : questions;
 
     // 1. Tạo Topic mới
     const newTopic = new Topic(topicObj);
@@ -187,14 +172,15 @@ exports.createFullLesson = async (req, res) => {
       topicId: newTopic._id,
       questions: questionIds,
       content,
-      media: mediaFile
+      media: mediaFile,
+      duration: parseInt(duration),
     });
 
     await lesson.save();
 
     res.status(201).json({
       message: "Lesson created successfully",
-      lesson
+      lesson,
     });
   } catch (error) {
     console.error("Error creating lesson:", error);

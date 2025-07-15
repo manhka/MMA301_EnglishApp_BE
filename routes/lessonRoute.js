@@ -30,7 +30,7 @@ router.get("/", lessonController.getLessons);
 router.get("/:id", lessonController.getLessonById);
 
 // Cập nhật Lesson
-router.put("/:id", lessonController.updateLesson);
+router.put("/:id", upload.single("media"), lessonController.updateLesson);
 
 // Xóa Lesson
 router.delete("/:id", lessonController.deleteLesson);

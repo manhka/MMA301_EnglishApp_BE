@@ -2,28 +2,29 @@ const express = require("express");
 const Result = require("../models/Result");
 const Lesson = require("../models/Lesson");
 const History = require("../models/History");
+const WritingSubmission = require("../models/WritingSubmission");
+const { evaluateWriting } = require("../services/ai");
+
+// ============================
+// GET USER PROGRESS
+// ============================
 exports.getUserProgress = async (req, res) => {
   try {
     const { userId, level } = req.params;
 
-    // validate
     const allowedLevels = ["Beginner", "Intermediate", "Advanced"];
     if (!allowedLevels.includes(level)) {
       return res.status(400).json({ message: "Invalid level" });
     }
 
-    // đếm tổng số bài theo level
     const totalLessons = await Lesson.countDocuments({ level });
 
-    // tìm kết quả của user
     const results = await Result.find({ userId })
       .populate("lessonId", "skill level")
       .lean();
 
-    // lọc kết quả đúng level
     const filteredResults = results.filter((r) => r.lessonId.level === level);
 
-    // tính skill progress
     const skillCount = {
       listening: 0,
       speaking: 0,
@@ -41,7 +42,6 @@ exports.getUserProgress = async (req, res) => {
       uniqueLessons.add(r.lessonId._id.toString());
     });
 
-    // trả về progress phần trăm
     const percent = totalLessons
       ? (uniqueLessons.size / totalLessons) * 100
       : 0;
@@ -61,11 +61,13 @@ exports.getUserProgress = async (req, res) => {
   }
 };
 
+// ============================
+// GET LESSONS BY TOPIC + LEVEL + SKILL
+// ============================
 exports.getLessonsByTopicLevelSkill = async (req, res) => {
   try {
     const { topicId, level, skill } = req.params;
 
-    // validate
     const allowedLevels = ["Beginner", "Intermediate", "Advanced"];
     const allowedSkills = ["listening", "speaking", "reading", "writing"];
 
@@ -76,11 +78,7 @@ exports.getLessonsByTopicLevelSkill = async (req, res) => {
       return res.status(400).json({ message: "Invalid skill" });
     }
 
-    const lessons = await Lesson.find({
-      topicId,
-      level,
-      skill,
-    });
+    const lessons = await Lesson.find({ topicId, level, skill });
 
     res.json({
       topicId,
@@ -95,13 +93,18 @@ exports.getLessonsByTopicLevelSkill = async (req, res) => {
   }
 };
 
+// ============================
+// GET READING LESSON
+// ============================
 exports.getReadingLesson = async (req, res) => {
   try {
     const lessonId = req.params.id;
+
     const lesson = await Lesson.findById(lessonId).populate({
       path: "questions",
-      select: "_id questionText type choices ",
+      select: "_id questionText type choices",
     });
+
     if (!lesson || lesson.skill !== "reading") {
       return res
         .status(404)
@@ -120,14 +123,19 @@ exports.getReadingLesson = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// ============================
+// GET WRITING LESSON
+// ============================
 exports.getWritingLesson = async (req, res) => {
   try {
     const lessonId = req.params.id;
+
     const lesson = await Lesson.findById(lessonId);
     if (!lesson || lesson.skill !== "writing") {
       return res
         .status(404)
-        .json({ error: "Lesson not found or not reading type" });
+        .json({ error: "Lesson not found or not writing type" });
     }
 
     res.json({
@@ -137,13 +145,18 @@ exports.getWritingLesson = async (req, res) => {
       duration: lesson.duration,
     });
   } catch (err) {
-    console.error("Error fetching reading lesson:", err);
+    console.error("Error fetching writing lesson:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// ============================
+// GET SPEAKING LESSON
+// ============================
 exports.getSpeakingLesson = async (req, res) => {
   try {
     const lessonId = req.params.id;
+
     const lesson = await Lesson.findById(lessonId);
     if (!lesson || lesson.skill !== "speaking") {
       return res
@@ -158,13 +171,18 @@ exports.getSpeakingLesson = async (req, res) => {
       duration: lesson.duration,
     });
   } catch (err) {
-    console.error("Error fetching reading lesson:", err);
+    console.error("Error fetching speaking lesson:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+// ============================
+// GET LISTENING LESSON
+// ============================
 exports.getListeningLesson = async (req, res) => {
   try {
     const lessonId = req.params.id;
+
     const lesson = await Lesson.findById(lessonId).populate({
       path: "questions",
       select: "_id questionText type choices",
@@ -188,9 +206,10 @@ exports.getListeningLesson = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-const WritingSubmission = require("../models/WritingSubmission");
-const { evaluateWriting } = require("../services/ai");
 
+// ============================
+// SUBMIT WRITING + EVALUATE
+// ============================
 exports.submitWriting = async (req, res) => {
   const { userId, lessonId, question, text } = req.body;
 
@@ -202,12 +221,12 @@ exports.submitWriting = async (req, res) => {
     const aiFeedback = await evaluateWriting(question, text);
     console.log("AI feedback:\n", aiFeedback);
 
-    // Tìm điểm tổng thể từ phản hồi
+    // Tìm điểm số từ AI feedback
     let aiScore = null;
 
     const bandRegexList = [
-      /\*\*?Overall Band Score:\*\*?\s*([0-9.]+)/i, // markdown bold
-      /Overall Band Score:?\s*([0-9.]+)/i, // chuẩn
+      /\*\*?Overall Band Score:\*\*?\s*([0-9.]+)/i,
+      /Overall Band Score:?\s*([0-9.]+)/i,
       /Overall Score:?\s*([0-9.]+)/i,
       /Overall Band:?\s*([0-9.]+)/i,
       /Overall:?\s*([0-9.]+)/i,
@@ -231,7 +250,8 @@ exports.submitWriting = async (req, res) => {
     });
 
     await submission.save();
-    // create history
+
+    // Lưu vào History
     await History.create({
       userId,
       skill: "writing",
@@ -240,6 +260,7 @@ exports.submitWriting = async (req, res) => {
       score: aiScore,
       submittedAt: submission.submittedAt,
     });
+
     res.status(200).json({
       message: "Writing submitted and evaluated.",
       submissionId: submission._id,
@@ -252,6 +273,9 @@ exports.submitWriting = async (req, res) => {
   }
 };
 
+// ============================
+// GET WRITING SUBMISSION BY ID
+// ============================
 exports.getWritingSubmissionById = async (req, res) => {
   try {
     const { id } = req.params;

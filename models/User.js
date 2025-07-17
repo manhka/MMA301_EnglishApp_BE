@@ -5,22 +5,32 @@ const UserSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true },
   name: { type: String, required: true },
   joinedAt: { type: Date, default: Date.now },
-  level: {
-    type: String,
-    enum: ["beginner", "intermediate", "advanced"],
-    default: "beginner",
-  },
   preferences: {
     favoriteTopics: [String],
     weakSkills: [String],
   },
   progress: {
-    listening: { type: Number, default: 0 },
-    speaking: { type: Number, default: 0 },
-    reading: { type: Number, default: 0 },
-    writing: { type: Number, default: 0 },
+    beginner: {
+      listening: { type: Number, default: 0 },
+      speaking: { type: Number, default: 0 },
+      reading: { type: Number, default: 0 },
+      writing: { type: Number, default: 0 },
+    },
+    intermediate: {
+      listening: { type: Number, default: 0 },
+      speaking: { type: Number, default: 0 },
+      reading: { type: Number, default: 0 },
+      writing: { type: Number, default: 0 },
+    },
+    advanced: {
+      listening: { type: Number, default: 0 },
+      speaking: { type: Number, default: 0 },
+      reading: { type: Number, default: 0 },
+      writing: { type: Number, default: 0 },
+    },
   },
   avatarUrl: { type: String },
   role: { type: String, enum: ["user", "admin"], default: "user" },
 });
+
 module.exports = mongoose.model("User", UserSchema, "users");

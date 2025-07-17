@@ -9,9 +9,10 @@ const ResultSchema = new mongoose.Schema({
   details: [
     {
       questionId: { type: mongoose.Schema.Types.ObjectId, ref: "Question" },
-      selected: Number,
+      selected: mongoose.Schema.Types.Mixed,
       correct: Boolean,
     },
   ],
 });
+
 module.exports = mongoose.model("Result", ResultSchema, "results");

@@ -1,16 +1,22 @@
 const Result = require("../models/Result");
 const Lesson = require("../models/Lesson");
 const History = require("../models/History");
+
+// ===========================
+// SUBMIT RESULT
+// ===========================
 exports.submitResult = async (req, res) => {
   try {
     const { lessonId, answers, userId } = req.body;
 
+    // Tìm bài học và load các câu hỏi
     const lesson = await Lesson.findById(lessonId).populate("questions");
     if (!lesson) return res.status(404).json({ error: "Lesson not found" });
 
     let correctCount = 0;
     const details = [];
 
+    // Duyệt từng câu hỏi để chấm điểm
     for (const question of lesson.questions) {
       const qId = question._id.toString();
       const userSelected = answers[qId];
@@ -28,6 +34,7 @@ exports.submitResult = async (req, res) => {
       const correctAnswers = question.correctAnswers;
       let isCorrect = false;
 
+      // So sánh đáp án
       if (isMultiple) {
         isCorrect =
           Array.isArray(selected) &&
@@ -46,8 +53,10 @@ exports.submitResult = async (req, res) => {
       });
     }
 
+    // Tính điểm %
     const score = Math.round((correctCount / lesson.questions.length) * 100);
 
+    // Lưu kết quả
     const result = await Result.create({
       userId: userId || null,
       lessonId: lesson._id,
@@ -55,6 +64,8 @@ exports.submitResult = async (req, res) => {
       score,
       details,
     });
+
+    // Lưu lịch sử làm bài
     await History.create({
       userId,
       skill: lesson.skill,
@@ -63,17 +74,25 @@ exports.submitResult = async (req, res) => {
       score,
       submittedAt: new Date(),
     });
+
+    // Populate để trả về kết quả đầy đủ
     const populatedResult = await Result.findById(result._id)
       .populate("lessonId", "title duration")
       .populate("details.questionId");
 
-    res.status(201).json({ resultId: result._id, result: populatedResult });
+    res.status(201).json({
+      resultId: result._id,
+      result: populatedResult,
+    });
   } catch (err) {
     console.error("Error submitting result:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
+// ===========================
+// GET RESULT BY ID
+// ===========================
 exports.getResult = async (req, res) => {
   try {
     const result = await Result.findById(req.params.id)

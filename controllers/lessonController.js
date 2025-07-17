@@ -1,6 +1,10 @@
 const Lesson = require("../models/Lesson");
+const Topic = require("../models/Topic");
 const Question = require("../models/Question");
 
+// ===========================
+// GET LESSON DETAIL BY ID
+// ===========================
 exports.getLessonDetail = async (req, res) => {
   try {
     const { lessonId } = req.params;
@@ -23,9 +27,10 @@ exports.getLessonDetail = async (req, res) => {
     res.status(500).json({ message: "Server error." });
   }
 };
-const Topic = require("../models/Topic");
 
-// Tạo mới Lesson
+// ===========================
+// CREATE NEW LESSON (basic)
+// ===========================
 exports.createLesson = async (req, res) => {
   try {
     const lesson = new Lesson(req.body);
@@ -36,10 +41,13 @@ exports.createLesson = async (req, res) => {
   }
 };
 
-// Lấy tất cả Lessons (có filter skill và level)
+// ===========================
+// GET LESSONS (with filters)
+// ===========================
 exports.getLessons = async (req, res) => {
   try {
     const { skill, level } = req.query;
+
     const filter = {};
     if (skill) filter.skill = skill;
     if (level) filter.level = level;
@@ -47,28 +55,35 @@ exports.getLessons = async (req, res) => {
     const lessons = await Lesson.find(filter)
       .populate("topicId")
       .populate("questions");
+
     res.json(lessons);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Lấy một Lesson theo ID
+// ===========================
+// GET LESSON BY ID (full)
+// ===========================
 exports.getLessonById = async (req, res) => {
   try {
     const lesson = await Lesson.findById(req.params.id)
       .populate("topicId")
       .populate("questions");
+
     if (!lesson) {
       return res.status(404).json({ message: "Lesson not found" });
     }
+
     res.json(lesson);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Cập nhật Lesson theo ID
+// ===========================
+// UPDATE LESSON BY ID
+// ===========================
 exports.updateLesson = async (req, res) => {
   try {
     const { title, skill, level, topic, questions, content, duration } =
@@ -79,10 +94,11 @@ exports.updateLesson = async (req, res) => {
       return res.status(404).json({ message: "Lesson not found" });
     }
 
-    // Parse topic
+    // Cập nhật Topic
     let topicId = lesson.topicId;
     if (topic) {
       const topicObj = typeof topic === "string" ? JSON.parse(topic) : topic;
+
       if (topicId) {
         await Topic.findByIdAndUpdate(topicId, topicObj);
       } else {
@@ -92,7 +108,7 @@ exports.updateLesson = async (req, res) => {
       }
     }
 
-    // Parse questions
+    // Cập nhật Questions
     let questionIds = lesson.questions || [];
     if (questions) {
       const questionsArray =
@@ -110,7 +126,7 @@ exports.updateLesson = async (req, res) => {
       }
     }
 
-    // Update lesson
+    // Cập nhật các trường còn lại
     lesson.title = title ?? lesson.title;
     lesson.skill = skill ?? lesson.skill;
     lesson.level = level ?? lesson.level;
@@ -124,32 +140,42 @@ exports.updateLesson = async (req, res) => {
     }
 
     await lesson.save();
-    res.json({ message: "Lesson updated successfully", lesson });
+
+    res.json({
+      message: "Lesson updated successfully",
+      lesson,
+    });
   } catch (error) {
     console.error("Update failed", error);
     res.status(400).json({ error: error.message });
   }
 };
 
-// Xóa Lesson theo ID
+// ===========================
+// DELETE LESSON BY ID
+// ===========================
 exports.deleteLesson = async (req, res) => {
   try {
     const lesson = await Lesson.findByIdAndDelete(req.params.id);
     if (!lesson) {
       return res.status(404).json({ message: "Lesson not found" });
     }
+
     res.json({ message: "Lesson deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
+// ===========================
+// CREATE LESSON + TOPIC + QUESTIONS (FULL)
+// ===========================
 exports.createFullLesson = async (req, res) => {
   try {
     const { title, skill, level, topic, questions, content, duration } =
       req.body;
 
-    // Nếu upload file (multer)
+    // Nếu có upload file
     const mediaFile = req.file ? req.file.filename : null;
 
     const topicObj = typeof topic === "string" ? JSON.parse(topic) : topic;
@@ -160,7 +186,7 @@ exports.createFullLesson = async (req, res) => {
     const newTopic = new Topic(topicObj);
     await newTopic.save();
 
-    // 2. Tạo nhiều Question
+    // 2. Tạo danh sách Question
     const createdQuestions = await Question.insertMany(questionsArray);
     const questionIds = createdQuestions.map((q) => q._id);
 
